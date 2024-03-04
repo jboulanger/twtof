@@ -1,0 +1,8 @@
+name: tof
+channels:
+  - conda-forge
+dependencies:
+  - numpy
+  - ipykernel
+  - matplotlib
+  - ipywidgets

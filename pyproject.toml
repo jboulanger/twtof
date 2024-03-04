@@ -1,0 +1,11 @@
+[project]
+name = "twtof"
+version = "2024.3.4"
+dependencies=[
+    "numpy",
+    "h5py",
+    "pandas"
+]
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
