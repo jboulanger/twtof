@@ -1,5 +1,4 @@
-# Loading Tofwerk HDF5 data format
+# Reader for Tofwerk time of flight mass spectroscopy data
 
-## Using the library
-- need to have the dll in the system path
-- loading the library cre
+
+
