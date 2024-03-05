@@ -15,6 +15,7 @@ An example conda environment is provided to run the notebook. For reference here
 ```bash
 git clone https://github.com/jboulanger/twtof.git
 conda env create -f environment.yml
+conda activate tof
 ```
 
 
