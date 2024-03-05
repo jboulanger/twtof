@@ -1,3 +1,4 @@
+from typing import Tuple, Dict
 from datetime import datetime
 import h5py
 import numpy as np
@@ -8,17 +9,46 @@ __version__ = "2024.3.4"
 __all__ = ["TofH5Reader", "imread", "as_dict"]
 
 
-def imread(filename):
-    """Read FIB image and Peak data from TwTOF HDF5 file"""
+def imread(filename: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Read FIB image and Peak data from TwTOF HDF5 file
+
+    Parameter
+    ---------
+    filename: str
+        path to the file
+
+    Return
+    ------
+    fib_image: np.ndarray
+        3D FIB image stack [depth,height,width]
+    mass: np.ndarray
+        Mass axis
+    peak_data:
+        4D peak data [depth,height,width,peak]
+    """
     with TofH5Reader(filename) as f:
         fib_image = f.load_fib_image()
         mass, peak_data = f.load_peak_data()
     return fib_image, mass, peak_data
 
 
-def as_dict(filename):
+def as_dict(filename: str) -> Dict:
+    """Read all the content of the file into a dictionnary
+
+    Parameter
+    ---------
+    filename: str
+        path to the file
+
+    Return
+    ------
+    dictionnary: Dict
+        A dictionnary with entries of the HDF5 file interpreted as
+        numpy arry when necessary.
+
+    """
     with TofH5Reader(filename) as f:
-        d = {
+        dictionnary = {
             "Acquisition log": f.load_acquisition_log(),
             "FIB image": f.load_fib_image(),
             "FIB Pressure": f.load_fib_pressure(),
@@ -28,16 +58,25 @@ def as_dict(filename):
             "Peak mass": f.load_peak_data()[0],
             "Peak data": f.load_peak_data()[1],
             "Peak table": f.load_peak_table(),
-            "TPSC2": f.load_tpsc2(),
+            "TPS2": f.load_tps2(),
             "Timing": f.load_timing_buf_times(),
         }
-    return d
+    return dictionnary
 
 
 class TofH5Reader:
     """Load HDF5 file and map the entries to python data structures"""
 
-    def __init__(self, filename, mode="r"):
+    def __init__(self, filename: str, mode: str = "r"):
+        """TofH5Reader
+
+        Parameter
+        ---------
+            filename: str
+                path to the file
+            mode: str
+                mode for opening the file
+        """
         self.filename = filename
         self.mode = mode
         self.open()
@@ -75,6 +114,7 @@ class TofH5Reader:
 
     def load_fib_image(self) -> np.ndarray:
         """Load FIB Image as a numpy ndarray
+
         Return
         ------
         numpy.ndarray
@@ -84,8 +124,8 @@ class TofH5Reader:
             [self.file["FIBImages"][n]["Data"] for n in self.file["FIBImages"]]
         )
 
-    def load_fib_pressure(self):
-        """Load pressure data"""
+    def load_fib_pressure(self) -> Tuple[np.ndarray, str]:
+        """Load FibParams/FibPressure/TwData as numpy.ndarray and FibParams/FibPressure/TwInfo as a str"""
         data = np.array(self.file["FibParams"]["FibPressure"]["TwData"]).ravel()
         info = "\n".join(
             [
@@ -95,26 +135,32 @@ class TofH5Reader:
         )
         return data, info
 
-    def load_full_spectra_events(self):
+    def load_full_spectra_events(self) -> np.ndarray:
+        """Load FullSpectra/EventList as a numpy.ndarray"""
         return np.array(self.file["FullSpectra"]["EventList"])
 
-    def load_full_spectra_mass_axis(self):
+    def load_full_spectra_mass_axis(self) -> np.ndarray:
+        """Load FullSpectra/MassAxis as a numpy.ndarray"""
         return np.array(self.file["FullSpectra"]["MassAxis"])
 
-    def load_full_spectra_saturation_warning(self):
+    def load_full_spectra_saturation_warning(self) -> np.ndarray:
+        """Load FullSpectra/SaturationWarning as a numpy.ndarray"""
         return np.array(self.file["FullSpectra"]["SaturationWarning"], dtype=np.uint8)
 
-    def load_full_spectra_sum_spectrum(self):
+    def load_full_spectra_sum_spectrum(self) -> np.ndarray:
+        """Load FullSpectra/SaturationWarning as a numpy.ndarray"""
         return np.array(self.file["FullSpectra"]["SumSpectrum"], dtype=np.float64)
 
-    def load_peak_data(self):
+    def load_peak_data(self) -> Tuple[np.ndarray, np.ndarray]:
+        """Load PeakData/PeakData and the mass from PeakData/PeakTable as numpy.ndarray"""
         mass = np.array(
             [float(c1) for _, c1, _, _ in self.file["PeakData"]["PeakTable"]]
         )
         peak = np.array(self.file["PeakData"]["PeakData"])
         return mass, peak
 
-    def load_peak_table(self):
+    def load_peak_table(self) -> pd.DataFrame:
+        """Load the PeakData/PeakTable as a pandas.DataFrame"""
         return pd.DataFrame.from_records(
             [
                 {
@@ -127,13 +173,15 @@ class TofH5Reader:
             ]
         )
 
-    def load_raw_data(self):
+    def load_raw_data(self) -> np.array:
         return np.array(self.file["RawData"]["XTDC4"])
 
-    def load_tpsc2(self):
+    def load_tps2(self) -> Tuple[np.ndarray, str]:
+        """Load TPS2/TwData and TPS2/TwInfo"""
         data = np.array(self.file["TPS2"]["TwData"])
         info = "\n".join([x.decode("latin-1") for x in self.file["TPS2"]["TwInfo"]])
         return data, info
 
-    def load_timing_buf_times(self):
-        return "\n".join([x.decode("latin-1") for x in self.file["TPS2"]["TwInfo"]])
+    def load_timing_buf_times(self) -> np.ndarray:
+        """Load timing data TimingData/BufTimes as a numpy.ndarray"""
+        return np.array(self.file["TimingData"]["BufTimes"])

@@ -1,5 +1,6 @@
-old/
 __pycache__
 build/
 dist/
 *.egg-info
+data/
+.vscode
