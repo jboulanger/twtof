@@ -4,7 +4,7 @@ import h5py
 import numpy as np
 import pandas as pd
 
-__version__ = "2024.3.4"
+__version__ = "2024.3.7"
 
 __all__ = ["TofH5Reader", "imread", "as_dict"]
 
@@ -119,10 +119,17 @@ class TofH5Reader:
         ------
         numpy.ndarray
             FIB image stack with dimensions [depth,heigh,width]
+
+        Note
+        ----
+        If an image is smaller than the others, then it is padded with zeros.
         """
-        return np.stack(
-            [self.file["FIBImages"][n]["Data"] for n in self.file["FIBImages"]]
-        )
+        stack = [self.file["FIBImages"][n]["Data"] for n in self.file["FIBImages"]]
+        shape = np.amax([x.shape for x in stack], 0)
+        img = np.zeros([len(stack), *shape])
+        for k, plane in enumerate(stack):
+            img[k, : plane.shape[0], : plane.shape[1]] = plane
+        return img
 
     def load_fib_pressure(self) -> Tuple[np.ndarray, str]:
         """Load FibParams/FibPressure/TwData as numpy.ndarray and FibParams/FibPressure/TwInfo as a str"""
