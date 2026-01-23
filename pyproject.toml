@@ -4,7 +4,8 @@ version = "2024.3.4"
 dependencies=[
     "numpy",
     "h5py",
-    "pandas"
+    "pandas",
+    "xarray"
 ]
 [build-system]
 requires = ["setuptools"]

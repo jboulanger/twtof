@@ -6,3 +6,8 @@ dependencies:
   - ipykernel
   - matplotlib
   - ipywidgets
+  - ipympl
+  - mpl-interactions
+  - tifffile
+  - pip:
+    - mpl_image_segmenter
