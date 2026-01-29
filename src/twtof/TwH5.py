@@ -253,7 +253,7 @@ class TofH5Reader:
         """Closes the HDF5 file if it is open."""
         if self.file is not None:
             self.file.close()
-            self.file
+            self.file = None
 
     def __repr__(self):
         return self.filename
